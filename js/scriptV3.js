@@ -8,8 +8,9 @@ botonEliminar.disabled = true;
 
 let formulario = document.getElementById("formulario");
 let campos = formulario.querySelectorAll("input, select");
+let idPersonaSeleccionada = null; // Guardará el ID real de la base de datos para actualizar o eliminar
 
-// Efectos visuales de enfoque en los campos
+// Efectos visuales de enfoque
 campos.forEach(campo =>{
     campo.addEventListener("focus", function(){
         this.style.backgroundColor = "gray";
@@ -23,79 +24,170 @@ campos.forEach(campo =>{
 let personas = [];
 
 // ==========================================
-// 1. OBTENER PERSONAS AL CARGAR LA PÁGINA (GET)
+// 1. OBTENER PERSONAS (GET) - Cargar la tabla
 // ==========================================
-// Esto soluciona que la tabla de abajo muestre lo que hay en la Base de Datos
 function cargarPersonas() {
     fetch('http://localhost:3000/personas')
         .then(respuesta => respuesta.json())
         .then(data => {
-            personas = data; // Guardamos los datos reales del servidor
-            mostrarPersona(); // Pintamos la tabla
+            personas = data; 
+            mostrarPersona(); 
         })
         .catch(error => console.error("Error al cargar las personas:", error));
 }
 
-// Ejecutamos la función apenas cargue el script
+// Cargar al iniciar la página
 cargarPersonas();
 
 
 // ==========================================
-// 2. GUARDAR PERSONA EN EL BACKEND Y MYSQL (POST)
+// 2. CREAR PERSONA (POST) - Botón Guardar
 // ==========================================
 botonGuardar.addEventListener("click", function(){
-
     let persona = {};
-
-    // Recorremos los campos para armar el objeto con los datos del formulario
     campos.forEach(campo =>{
         persona[campo.id] = campo.value;
     });
 
-    // Validamos que los campos obligatorios no estén vacíos antes de enviar
     if (!persona.numeroDocumento || !persona.nombres) {
         alert("Por favor completa al menos el documento y los nombres.");
         return;
     }
 
-    console.log("Enviando objeto al servidor:", persona);
-
-    // Petición fetch hacia tu API de Node.js
     fetch('http://localhost:3000/personas', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(persona) // Convertimos el objeto JS a formato JSON
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(persona)
     })
     .then(respuesta => respuesta.json())
     .then(datosGuardados => {
-        console.log("Respuesta del servidor:", datosGuardados);
-        
-        alert("¡Persona guardada exitosamente en la base de datos!");
-        
-        // Limpiamos los campos del formulario visualmente
-        campos.forEach(campo => {
-            campo.value = "";
-        });
-
-        // Recargamos la tabla consultando de nuevo al servidor para ver el registro guardado
+        alert("¡Persona guardada exitosamente!");
+        limpiarFormulario();
         cargarPersonas();
     })
-    .catch(error => {
-        console.error("Error al conectar con el servidor:", error);
-        alert("Hubo un error al conectar con el servidor.");
-    });
+    .catch(error => console.error("Error al guardar:", error));
 });
 
 
 // ==========================================
-// 3. FUNCIÓN PARA PINTAR LA TABLA VISUAL
+// BUSCAR POR DOCUMENTO (Para activar Actualizar/Eliminar)
 // ==========================================
+let numeroDocumentoInput = document.getElementById("numeroDocumento");
+let tipoDocumentoInput = document.getElementById("tipoDocumento");
+
+numeroDocumentoInput.addEventListener("blur", function(){
+    let docBusqueda = numeroDocumentoInput.value;
+    let tipoBusqueda = tipoDocumentoInput.value;
+
+    if (!docBusqueda) return;
+
+    // Buscamos en la lista actual que trajimos del servidor
+    let personaEncontrada = personas.find(
+        p => p.numeroDocumento === docBusqueda && p.tipoDocumento === tipoBusqueda
+    );
+
+    if(personaEncontrada){
+        // Rellenamos los campos con los datos encontrados
+        campos.forEach(campo => {
+            if(personaEncontrada[campo.id] !== undefined) {
+                // Si es un campo de fecha, recortamos para que el input lo acepte correctamente
+                if (campo.type === "date" && personaEncontrada[campo.id]) {
+                    campo.value = personaEncontrada[campo.id].substring(0, 10);
+                } else {
+                    campo.value = personaEncontrada[campo.id];
+                }
+            }
+        });
+
+        // Guardamos el ID interno de la base de datos (id_persona)
+        idPersonaSeleccionada = personaEncontrada.id_persona;
+
+        alert("¡Persona encontrada! Ya puedes actualizarla o eliminarla.");
+
+        botonGuardar.disabled = true;
+        botonActualizar.disabled = false;
+        botonEliminar.disabled = false;
+    }
+});
+
+
+// ==========================================
+// 3. ACTUALIZAR PERSONA (PUT) - Botón Actualizar
+// ==========================================
+botonActualizar.addEventListener("click", function(){
+    if (!idPersonaSeleccionada) {
+        alert("No hay ningua persona seleccionada para actualizar.");
+        return;
+    }
+
+    let personaActualizada = {};
+    campos.forEach(campo =>{
+        if (campo.type === "date" && campo.value) {
+        // Cortamos para enviar solo la fecha (YYYY-MM-DD) sin la hora UTC
+        personaActualizada[campo.id] = campo.value.substring(0, 10);
+    } else {
+        personaActualizada[campo.id] = campo.value;
+    }
+});
+    
+
+    //console.log("el id seleccionado es:", idPersonaSeleccionada);
+    //console.log("tipo de datos:", typeof idPersonaSeleccionada);
+
+    fetch(`http://localhost:3000/personas/${idPersonaSeleccionada}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(personaActualizada)
+    })
+    .then(respuesta => respuesta.json())
+    .then(resultado => {
+        alert("¡Persona actualizada exitosamente!");
+        limpiarFormulario();
+        cargarPersonas();
+    })
+    .catch(error => console.error("Error al actualizar:", error));
+    });
+
+
+// ==========================================
+// 4. ELIMINAR PERSONA (DELETE) - Botón Eliminar
+// ==========================================
+botonEliminar.addEventListener("click", function(){
+    if (!idPersonaSeleccionada) {
+        alert("No hay ninguna persona seleccionada para eliminar.");
+        return;
+    }
+
+    if (confirm("¿Estás seguro de que deseas eliminar a esta persona?")) {
+        fetch(`http://localhost:3000/personas/${idPersonaSeleccionada}`, {
+            method: 'DELETE'
+        })
+        .then(respuesta => respuesta.json())
+        .then(resultado => {
+            alert("¡Persona eliminada exitosamente!");
+            limpiarFormulario();
+            cargarPersonas();
+        })
+        .catch(error => console.error("Error al eliminar:", error));
+    }
+});
+
+
+// ==========================================
+// FUNCIONES AUXILIARES
+// ==========================================
+function limpiarFormulario() {
+    campos.forEach(campo => campo.value = "");
+    idPersonaSeleccionada = null;
+    botonGuardar.disabled = false;
+    botonActualizar.disabled = true;
+    botonEliminar.disabled = true;
+}
+
 let tabla = document.getElementById("tablaPersona");
 
 function mostrarPersona(){
-    tabla.innerHTML = ""; // Limpiamos la tabla antes de volver a pintarla
+    tabla.innerHTML = ""; 
 
     personas.forEach(persona => {
         let fila = tabla.insertRow();
