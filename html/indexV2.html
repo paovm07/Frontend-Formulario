@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+  <title>Formulario</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+
+    input,
+    select {
+      width: 200px;
+      padding: 4px;
+    }
+
+    button {
+      margin-top: 20px;
+      margin-right: 10px;
+      padding: 6px 14px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      border: 1px solid black;
+      padding: 10px;
+    }
+
+    header img {
+      width: 60px;
+      height: 60px;
+      margin-right: 15px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <img src="../resources/images/logo_tdea.jpg" alt="Logo">
+    <h2>Tecnologico de Antioquia UI</h2>
+  </header>
+
+  <form action="" method="post" id="formulario">
+
+    <table width="650">
+
+      <tr>
+        <td>
+          <label for="tipoDocumento">
+            Tipo de documento
+          </label>
+        </td>
+        <td>
+          <select id="tipoDocumento" name="tipoDocumento">
+            <option value="">Seleccione</option>
+            <option value="CC">Cédula de ciudadanía</option>
+            <option value="CE">Cédula de extranjería</option>
+            <option value="TI">Tarjeta de identidad</option>
+            <option value="PA">Pasaporte</option>
+          </select>
+        </td>
+      </tr>
+
+      <tr>
+        <td>
+          <label for="numerodocumento">
+            Numero de docuemento
+          </label>
+        </td>
+        <td>
+          <input type="text" id="numeroDocumento" name="numeroDocumento">
+        </td>
+      </tr>
+
+      <tr>
+        <td>
+          <label for="Nombres">
+            Nombres
+          </label>
+        </td>
+        <td>
+          <input type="text" id="nombres" name="nombres">
+        </td>
+      </tr>
+
+      <tr>
+        <td>
+          <label for="Apellidos">
+            Apellidos
+          </label>
+        </td>
+        <td>
+          <input type="text" id="apellidos" name="apellidos">
+        </td>
+      </tr>
+
+      <tr>
+        <td>
+          <label for="Fecha Nacimiento">
+            Fecha Nacimiento
+          </label>
+        </td>
+        <td>
+          <input type="date" id="fechaNacimiento" name="fechaNacimiento">
+        </td>
+      </tr>
+
+      <tr>
+        <td>
+          <label for="Correo">
+            Correo
+          </label>
+        </td>
+        <td>
+          <input type="email" id="correo" name="correo">
+        </td>
+      </tr>
+
+      <tr>
+        <td>
+          <label for="Dirección">
+            Dirección
+          </label>
+        </td>
+        <td>
+          <input type="text" id="direccion" name="direccion">
+        </td>
+      </tr>
+
+      <tr>
+        <td>
+          <label for="Ciudad">
+            Ciudad
+          </label>
+        </td>
+        <td>
+          <select id="ciudad" name="ciudad">
+            <option value="">Seleccione</option>
+            <option value="Bogota">Bogotá</option>
+            <option value="Medellin">Medellín</option>
+            <option value="Cali">Cali</option>
+            <option value="Barranquilla">Barranquilla</option>
+          </select>
+        </td>
+      </tr>
+
+      <tr>
+        <td>
+          <label for="Teléfono">
+            Teléfono
+          </label>
+        </td>
+        <td>
+          <input type="text" id="telefono" name="telefono">
+        </td>
+      </tr>
+
+    </table>
+
+    <div>
+      <button id="btnGuardar" type="button">Guardar</button>
+      <button id="btnActualizar" type="button">Actualizar</button>
+      <button id="btnEliminar" type="button">Eliminar</button>
+    </div>
+    <br>
+  </form>
+  <table border="1" width="100%">
+
+    <thead>
+      <tr>
+        <th>Tipo de documento</th>
+        <th>Número de documento</th>
+        <th>Nombres</th>
+        <th>Apellidos</th>
+        <th>Fecha Nacimiento</th>
+        <th>Correo</th>
+        <th>Dirección</th>
+        <th>Ciudad</th>
+        <th>Teléfono</th>
+      </tr>
+    </thead>
+
+    <tbody id="tablaPersona">
+    </tbody>
+  </table>
+
+  <script src="../js/scriptV3.js"> </script>
+
+</body>
+
+</html>
