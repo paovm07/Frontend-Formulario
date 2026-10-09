@@ -9,98 +9,95 @@ botonEliminar.disabled = true;
 let formulario = document.getElementById("formulario");
 let campos = formulario.querySelectorAll("input, select");
 
+// Efectos visuales de enfoque en los campos
 campos.forEach(campo =>{
-
     campo.addEventListener("focus", function(){
         this.style.backgroundColor = "gray";
-
     });
 
     campo.addEventListener("blur", function(){
         this.style.backgroundColor = "white";
-
     });
-
 });
 
 let personas = [];
 
-// Guardar objeto e imprimir por consola
+// ==========================================
+// 1. OBTENER PERSONAS AL CARGAR LA PÁGINA (GET)
+// ==========================================
+// Esto soluciona que la tabla de abajo muestre lo que hay en la Base de Datos
+function cargarPersonas() {
+    fetch('http://localhost:3000/personas')
+        .then(respuesta => respuesta.json())
+        .then(data => {
+            personas = data; // Guardamos los datos reales del servidor
+            mostrarPersona(); // Pintamos la tabla
+        })
+        .catch(error => console.error("Error al cargar las personas:", error));
+}
+
+// Ejecutamos la función apenas cargue el script
+cargarPersonas();
+
+
+// ==========================================
+// 2. GUARDAR PERSONA EN EL BACKEND Y MYSQL (POST)
+// ==========================================
 botonGuardar.addEventListener("click", function(){
 
-        let persona = {};
+    let persona = {};
 
-        console.log("Creando objeto");
+    // Recorremos los campos para armar el objeto con los datos del formulario
+    campos.forEach(campo =>{
+        persona[campo.id] = campo.value;
+    });
 
-        campos.forEach(campo =>{
+    // Validamos que los campos obligatorios no estén vacíos antes de enviar
+    if (!persona.numeroDocumento || !persona.nombres) {
+        alert("Por favor completa al menos el documento y los nombres.");
+        return;
+    }
 
-            persona[campo.id] = campo.value;
+    console.log("Enviando objeto al servidor:", persona);
+
+    // Petición fetch hacia tu API de Node.js
+    fetch('http://localhost:3000/personas', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(persona) // Convertimos el objeto JS a formato JSON
+    })
+    .then(respuesta => respuesta.json())
+    .then(datosGuardados => {
+        console.log("Respuesta del servidor:", datosGuardados);
+        
+        alert("¡Persona guardada exitosamente en la base de datos!");
+        
+        // Limpiamos los campos del formulario visualmente
+        campos.forEach(campo => {
             campo.value = "";
         });
 
-        validarPersona(persona);
+        // Recargamos la tabla consultando de nuevo al servidor para ver el registro guardado
+        cargarPersonas();
+    })
+    .catch(error => {
+        console.error("Error al conectar con el servidor:", error);
+        alert("Hubo un error al conectar con el servidor.");
+    });
 });
 
 
-let numeroDocumento = document.getElementById("numeroDocumento");
-
-numeroDocumento.addEventListener("change", function(){
-
-    let personaExistente = personas.find(
-        p => p.numeroDocumento === numeroDocumento.value && p.tipoDocumento === tipoDocumento.value
-    );
-
-    if(personaExistente){
-
-        campos.forEach(campo => {
-            campo.value = personaExistente[campo.id];
-        });
-
-        alert("Documento: " + personaExistente.numeroDocumento + ", ya existe" + "\nNombre: " +
-            personaExistente.nombres + " " + personaExistente.apellidos
-        );
-
-        botonGuardar.disabled = true;
-        botonActualizar.disabled = false;
-        botonEliminar.disabled = false;
-
-    } else {
-// Enviar los datos al backend
-        fetch('http://localhost:3000/personas', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(persona) // Convertimos el objeto a texto JSON
-        })
-        .then(respuesta => respuesta.json())
-        .then(datosGuardados => {
-            console.log("Respuesta del servidor:", datosGuardados);
-            
-            // Actualizar la tabla visual
-            personas.push(persona);
-            mostrarPersona();
-
-            botonActualizar.disabled = true;
-            botonEliminar.disabled = true;
-            botonGuardar.disabled = false;
-            
-            alert("Persona guardada exitosamente en la base de datos");
-        })
-        .catch(error => {
-            console.error("Error al conectar con el servidor:", error);
-            alert("Hubo un error al conectar con el servidor.");
-});
-
+// ==========================================
+// 3. FUNCIÓN PARA PINTAR LA TABLA VISUAL
+// ==========================================
 let tabla = document.getElementById("tablaPersona");
 
-// Función para agregar las personas la tabla
 function mostrarPersona(){
-
-    tabla.innerHTML = "";
+    tabla.innerHTML = ""; // Limpiamos la tabla antes de volver a pintarla
 
     personas.forEach(persona => {
-
         let fila = tabla.insertRow();
 
         let celdatipoDocumento = fila.insertCell();
@@ -129,40 +126,5 @@ function mostrarPersona(){
 
         let telefono = fila.insertCell();
         telefono.textContent = persona.telefono;
-
     });
- 
-};
-
-// Función para validar si ya existe una persona con un número de documento
-function validarPersona(persona){
-
-    let personaExistente = personas.find(
-        p => p.numeroDocumento === numeroDocumento.value && p.tipoDocumento === tipoDocumento.value
-    );
-
-    if(personaExistente){
-
-        campos.forEach(campo=>{
-            campo.value = personaExistente[campo.id];
-        });
-
-        alert("Documento: " + personaExistente.numeroDocumento + ", ya existe" + "\nNombre: " +
-            personaExistente.nombres + " " + personaExistente.apellidos
-        );
-
-        botonGuardar.disabled = true;
-        botonActualizar.disabled = false;
-        botonEliminar.disabled = false;
-        
-        return;
-    } else{
-        personas.push(persona);
-        console.log(persona);
-        mostrarPersona();
-
-        botonActualizar.disabled = true;
-        botonEliminar.disabled = true;
-        botonGuardar.disabled = false;
-    }
-};
+}
